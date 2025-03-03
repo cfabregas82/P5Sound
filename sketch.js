@@ -13,7 +13,7 @@ let xSlide;
 let vueltas = 0;
 
 function preload() {
-  song = loadSound('https://singhimalaya.github.io/Codepen/assets/music/1.mp3');
+  song = loadSound('10.mp3');
 }
 
 function setup() {
