@@ -100,7 +100,7 @@ function windowResized() {
 function draw() {
   
   translate(-width / 2, -height / 2, 0);
-  background(random(255), random(255), random(255));
+  background(fft.getEnergy("bass"), fft.getEnergy("mid"), fft.getEnergy("treble"));
   image(img, 0, 0);
   
   translate(0,0, 100);
