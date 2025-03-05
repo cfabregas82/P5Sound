@@ -1,76 +1,95 @@
 let mic, song, fft, amp;
-let centerX, centerY, radius;
-let totalDegrees = 360;
-let r, g, b;
+let volume;
+let vol, punch;
 let bassIntensity, midIntensity, trebleIntensity;
-let button1, button2, button3, button4;
-let slider1, slider2, slider3;
-let input1, input2, input3, input4, input5, input6, input7, input8, input9, input10, input11, input12;
-let duracion, punch, current;
 let isPlaying = false;
-let ySlide;
-let xSlide;
-let vueltas = 0;
+let currentSongName = "Szamár Madár | Venetian Snares";
+let ySlide, xSlide;
+let sWeight;
+let x = 0;
+let targetX = 300; // Variable para suavizar el movimiento
+
+let img;
 
 function preload() {
-  song = loadSound('10.mp3');
+  song = loadSound("https://cfabregas82.github.io/P5Sound/10.mp3");
 }
 
+console.log("Canción cargada: " + currentSongName);
+
 function setup() {
-  createCanvas(windowWidth, windowHeight, WEBGL);
-  frameRate(30);
-
-  mic = new p5.AudioIn();
-  mic.start();
-  amp = new p5.Amplitude();  
-
-  button1 = createButton("Play").position(10, 20).mouseClicked(play);
-  button2 = createButton("Pause").position(99, 20).mouseClicked(pausa);
-  button3 = createButton("Clear").position(200, 20).mouseClicked(borra);
-  button4 = createButton('Save PNG').position(297, 20).mouseClicked(captura);
-
-  slider1 = createSlider(-1.0, 1.0, 0.30, 0.01).position(8, 125).size(150);
-  slider2 = createSlider(8, 120, 30, 0.5).position(170, 125).size(150);
-  slider3 = createSlider(0.01, 1.50, 0.25, 0.01).position(330, 125).size(150);
-
-  slider4 = createSlider(0, 1, 0.5, 0.01).position(ySlide, xSlide).size(300);
+  noSmooth();
   
-  slider4.input(() => song.setVolume(slider4.value()));
+  img = createImage(windowWidth, windowHeight);
+  img.loadPixels();
 
-  centerX = width / 2;
-  centerY = height / 2;
-  radius = random(random(width * 0.6, width * 1), random(height * 0.6, height * 1));
-  angleMode(DEGREES);
-  r = random(100, 255);
-  g = random(0, 155);
-  b = random(0, 55);
+  for (let x = 0; x < img.width; x += 1) {
+    for (let y = 0; y < img.height; y += 1) {
+      let a = map(x, 0, img.width, 0, 255);
+      let c = color(63, 191, 191, a);
+      img.set(x, y, c);
+    }
+  }
+  img.updatePixels();
+  
+  frameRate(60);
+  createCanvas(windowWidth, windowHeight, WEBGL);
 
+  //mic = new p5.AudioIn();
+  //mic.start();
+  amp = new p5.Amplitude();
   fft = new p5.FFT();
 
-  input1 = createInput('').position(10, 80).size(110);
-  input2 = createInput('').position(130, 80).size(110);
-  input3 = createInput('').position(250, 80).size(110);
-  input4 = createInput('').position(370, 80).size(110);
-  input5 = createInput('').position(490, 80).size(110);
+  button1 = createButton("Play").position(10, 30).mouseClicked(play);
+  button2 = createButton("Pause")
+    .position(60, 30)
+    .mouseClicked(pausa)
+    .addClass("but2");
 
-  input6 = createInput('').position(10, 150).size(65);
-  input7 = createInput('').position(10, 200).size(65);
-  input8 = createInput('').position(10, 250).size(65);
-  
-  input9 = createInput('').position(10, 300).size(90);
-  input10 = createInput('').position(10, 350).size(90);
-  input11 = createInput('').position(10, 400).size(90);
-  
-  input12 = createInput('').position(10, height - 55).size(95);
+  fileInput = createFileInput(handleFile);
+  fileInput.position(10, 5).addClass("file-input");
 
-  noLoop();
+  slider4 = createSlider(0, 1, 0.5, 0.001)
+    .position(ySlide, xSlide)
+    .size(300)
+    .addClass("sli4");
+  slider4.input(() => {
+    if (song) song.setVolume(slider4.value());
+  });
+
+  slider5 = createSlider(100, 200, 150, 1)
+    .position(8, 60)
+    .size(300)
+    .addClass("sli5");
+  slider7 = createSlider(200, 400, 200, 1)
+    .position(8, 80)
+    .size(300)
+    .addClass("sli7");
 }
 
 function play() {
-  if (!isPlaying) {
+  if (!isPlaying && song) {
     song.play();
     isPlaying = true;
     loop();
+  }
+}
+
+function handleFile(file) {
+  if (file.type === "audio") {
+    if (file.name !== currentSongName) {
+      currentSongName = file.name; // Actualizar nombre actual
+
+      if (song) song.stop(); // Detener la canción anterior
+      song = loadSound(file.data, () => {
+        console.log("Nueva canción cargada: " + currentSongName);
+        loop();
+      });
+    } else {
+      console.log("La misma canción ya está cargada.");
+    }
+  } else {
+    alert("Por favor selecciona un archivo de audio.");
   }
 }
 
@@ -78,108 +97,93 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
 
-function draw() {  
-  noFill();
-  translate(-width / 2, -height / 2);  
+function draw() {
+  
+  translate(-width / 2, -height / 2, 0);
+  background(random(255), random(255), random(255));
+  image(img, 0, 0);
+  
+  translate(0,0, 100);
+  
+  pointLight(255, 255, 205, 0, 100, 0);
+
   ySlide = width - 320;
   xSlide = height - 45;
-  
-  if (slider4.position != (ySlide, xSlide)){
+
+  if (slider4.position().x !== ySlide || slider4.position().y !== xSlide) {
     slider4.position(ySlide, xSlide);
   }
 
-  push();
-  fill(220);
-  noStroke();
-  duracion = song.duration();
-  current = song.currentTime();
-  let rectWidth = map(current, 0, duracion, 0, windowWidth);
-  rect(0, windowHeight - 10, rectWidth, 15);
-  pop();
+  //volume = mic.getLevel() * 1000;
+  //vol = map(volume, 1, 10, 50, 80);
 
   let spectrum = fft.analyze();
   bassIntensity = map(fft.getEnergy("bass"), 0, 255, 0, 1);
-  midIntensity = map(fft.getEnergy("mid"), 0, 255, 0, 0.5);
+  midIntensity = map(fft.getEnergy("mid"), 0, 255, 0, 1);
   trebleIntensity = map(fft.getEnergy("treble"), 0, 255, 0, 1);
 
-  punch = map((bassIntensity * 8) + (midIntensity * 4) + (trebleIntensity * 4), 0, 5, 0, 3);
+  punch = map(
+    bassIntensity * 8 + midIntensity * 4 + trebleIntensity * 4,
+    0,
+    5,
+    0,
+    150
+  );
+  let punchi = map(punch, 200, 400, 50, 100);
+  let bass1 = map(punchi, 0, 300, 0, 1);
 
-  let rd = slider1.value();
-  let onda = slider2.value();
-  let multi = slider3.value();
+  //orbitControl(2, 2, 1);
 
-  let r1 = constrain(r, -100, 255);
-  let g1 = constrain(g, -100, 255);
-  let b1 = constrain(b, -100, 255);
+  noFill();
+  stroke(250);
 
-  stroke(r1, g1, b1, 25);
-  strokeWeight(0.5);  
+  sWeight = slider5.value();
+  let diam = slider7.value();
+
+  /*beginShape();
+  strokeWeight(sWeight);
+  circle(width / 2, height / 2, (punch * 1.3) + diam);
+  endShape();*/
+
+  /*beginShape();
+  strokeWeight(punchi);
+  line(x, 100, x, 500);
+  endShape();*/
 
   beginShape();
-  let noiseFactor2 = noise(onda * 5 / onda * 5);
-  for (let i = 0; i <= totalDegrees - 0.8; i++) {
-    var noiseFactor = noise(i / onda, frameCount / 900);    
-    var x = centerX + radius * cos(i * 2) * noiseFactor2;
-    var y = centerY + radius * sin(i * 2) * noiseFactor;
-    curveVertex(x, y);
-  }
-  endShape(CLOSE);
-
-  actualizarInputs(rd, onda, multi, vueltas);
-
-  radius -= (punch * multi) - rd;
-  r -= 0.05;
-  g += 0.05;
-  b += 0.05;
-
-  if (radius <= 0) {
-    radius = random(random(width * 0.5, width * 1), random(height * 0.5, height * 1));
-    r = random(100, 255);
-    g = random(0, 255);
-    b = random(0, 225);
-    strokeWeight(0.5);
-    vueltas += 1;
-  }
-
-  push();
-  beginShape(POINTS);
-  strokeWeight(25);
-  vertex(width - 40, 40);
+  strokeWeight(punchi);
+  stroke(0);
+  vertex(width / 2, 0);
+  vertex(x, height / 3);
+  vertex(width / 2, height / 2);
+  vertex(x, height / 1.5);
+  vertex(width / 2, height);
   endShape();
-  pop();
 
-  if (!song.isPlaying()) {
+  targetX = map(bassIntensity, 0, 1, 0, width); // Define el rango de movimiento
+
+  if (bassIntensity > 0.4) {
+    x = targetX; // Cambio brusco
+  } else {
+    x = lerp(x, targetX, 0.9); // Menos suavizado
+  }
+
+  /*beginShape(POINTS);
+  stroke(255);
+  strokeWeight(punch - diam/6);
+  vertex(width / 2, height / 2);
+  endShape();*/
+
+  if (!song || !song.isPlaying()) {
     isPlaying = false;
     noLoop();
-  }  
-}
-
-function actualizarInputs(rd, onda, multi, vueltas) {
-  input1.value('Radius: ' + round(radius, 2));
-  input2.value('Punch: ' + round(punch, 2));
-  input3.value('RD: ' + rd);
-  input4.value('Wave: ' + onda);
-  input5.value('Mult: ' + multi);
-
-  input6.value('R: ' + round(r));
-  input7.value('G: ' + round(g));
-  input8.value('B: ' + round(b));
-  input9.value('Bass:   ' + round(bassIntensity, 2));
-  input10.value('Mid:    ' + round(midIntensity, 2));
-  input11.value('Treble: ' + round(trebleIntensity, 2));
-  input12.value('Iterations: ' + vueltas);
+  }
 }
 
 function pausa() {
-  song.pause();
-  isPlaying = false;
-  noLoop();
-}
-
-function borra() {
-  clear();
-}
-
-function captura() {
-  save('mycanvas.png');
+  if (song) {
+    song.pause();
+    isPlaying = false;
+    noLoop();
+  }
 }
