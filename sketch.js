@@ -42,7 +42,7 @@ function setup() {
 
   button1 = createButton("Play").position(10, 30).mouseClicked(play);
   button2 = createButton("Pause")
-    .position(100, 30)
+    .position(60, 30)
     .mouseClicked(pausa)
     .addClass("but2");
 
