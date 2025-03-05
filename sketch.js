@@ -42,7 +42,7 @@ function setup() {
 
   button1 = createButton("Play").position(10, 30).mouseClicked(play);
   button2 = createButton("Pause")
-    .position(60, 30)
+    .position(100, 30)
     .mouseClicked(pausa)
     .addClass("but2");
 
@@ -58,11 +58,11 @@ function setup() {
   });
 
   slider5 = createSlider(100, 200, 150, 1)
-    .position(8, 60)
+    .position(8, 70)
     .size(300)
     .addClass("sli5");
   slider7 = createSlider(200, 400, 200, 1)
-    .position(8, 80)
+    .position(8, 90)
     .size(300)
     .addClass("sli7");
 }
