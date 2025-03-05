@@ -140,10 +140,10 @@ function draw() {
   sWeight = slider5.value();
   let diam = slider7.value();
 
-  /*beginShape();
+  beginShape();
   strokeWeight(sWeight);
   circle(width / 2, height / 2, (punch * 1.3) + diam);
-  endShape();*/
+  endShape();
 
   /*beginShape();
   strokeWeight(punchi);
