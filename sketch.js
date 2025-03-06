@@ -3,16 +3,21 @@ let volume;
 let vol, punch;
 let bassIntensity, midIntensity, trebleIntensity;
 let isPlaying = false;
-let currentSongName = "Szamár Madár | Venetian Snares";
+let currentSongName = "Szamár Madár - Venetian Snares";
 let ySlide, xSlide;
 let sWeight;
 let x = 0;
-let targetX = 300; // Variable para suavizar el movimiento
+let targetX = 100;
 
 let img;
 
+let font;
+
+let space = 80;
+
 function preload() {
   song = loadSound("https://cfabregas82.github.io/P5Sound/10.mp3");
+  font = loadFont('Jersey15-Regular.ttf');
 }
 
 console.log("Canción cargada: " + currentSongName);
@@ -34,9 +39,12 @@ function setup() {
   
   frameRate(60);
   createCanvas(windowWidth, windowHeight, WEBGL);
+  
+  textFont(font);    
+  textAlign(CENTER, CENTER);
 
-  //mic = new p5.AudioIn();
-  //mic.start();
+  mic = new p5.AudioIn();
+  mic.start();
   amp = new p5.Amplitude();
   fft = new p5.FFT();
 
@@ -57,14 +65,8 @@ function setup() {
     if (song) song.setVolume(slider4.value());
   });
 
-  slider5 = createSlider(100, 200, 150, 1)
-    .position(8, 70)
-    .size(300)
-    .addClass("sli5");
-  slider7 = createSlider(200, 400, 200, 1)
-    .position(8, 90)
-    .size(300)
-    .addClass("sli7");
+  slider5 = createSlider(100, 200, 150, 1).position(8, 60).size(300).addClass("sli5");
+  slider7 = createSlider(100, 400, 200, 1).position(8, 80).size(300).addClass("sli7");
 }
 
 function play() {
@@ -77,8 +79,10 @@ function play() {
 
 function handleFile(file) {
   if (file.type === "audio") {
-    if (file.name !== currentSongName) {
-      currentSongName = file.name; // Actualizar nombre actual
+    let fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ""); // Eliminar extensión
+
+    if (fileNameWithoutExt !== currentSongName) {
+      currentSongName = fileNameWithoutExt; // Actualizar nombre sin extensión
 
       if (song) song.stop(); // Detener la canción anterior
       song = loadSound(file.data, () => {
@@ -93,10 +97,6 @@ function handleFile(file) {
   }
 }
 
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-}
-
 function draw() {
   
   translate(-width / 2, -height / 2, 0);
@@ -105,8 +105,6 @@ function draw() {
   
   translate(0,0, 100);
   
-  pointLight(255, 255, 205, 0, 100, 0);
-
   ySlide = width - 320;
   xSlide = height - 45;
 
@@ -114,43 +112,75 @@ function draw() {
     slider4.position(ySlide, xSlide);
   }
 
-  //volume = mic.getLevel() * 1000;
-  //vol = map(volume, 1, 10, 50, 80);
+  volume = mic.getLevel() * 1000;
+  vol = map(volume, 1, 10, 50, 80);
 
   let spectrum = fft.analyze();
   bassIntensity = map(fft.getEnergy("bass"), 0, 255, 0, 1);
   midIntensity = map(fft.getEnergy("mid"), 0, 255, 0, 1);
   trebleIntensity = map(fft.getEnergy("treble"), 0, 255, 0, 1);
 
-  punch = map(
-    bassIntensity * 8 + midIntensity * 4 + trebleIntensity * 4,
-    0,
-    5,
-    0,
-    150
-  );
+  punch = map(bassIntensity * 8 + midIntensity * 4 + trebleIntensity * 4, 0, 5, 0, 150);
   let punchi = map(punch, 200, 400, 50, 100);
   let bass1 = map(punchi, 0, 300, 0, 1);
+  
+  targetX = map(bassIntensity, 0, 1, 0, width / 2); // Define el rango de movimiento
 
-  //orbitControl(2, 2, 1);
-
-  noFill();
-  stroke(250);
+  if (bassIntensity > 0.4) {
+    x = targetX; // Cambio brusco
+  } else {
+    x = lerp(x, targetX, 0.9); // Menos suavizado
+  }
 
   sWeight = slider5.value();
   let diam = slider7.value();
-
+  
+  noFill();  
+  
+  push();
+  translate(0, 0, 100);
   beginShape();
+  stroke(fft.getEnergy("bass"), fft.getEnergy("mid"), fft.getEnergy("treble"));
   strokeWeight(sWeight);
-  circle(width / 2, height / 2, (punch * 1.3) + diam);
+  circle(width / 2, height / 2, (punch * 1.1) + diam);
   endShape();
+  pop();
 
+  for (let x1 = 0 - 300; x1 + space < width + 300; x1 += space) {
+    push();
+    translate(x1, 0, 10);
+    beginShape();
+    strokeWeight(10);
+    noFill();
+    stroke(255, 5);
+
+    vertex((space / 2) - 40, 0);
+    vertex(x, height / 3);
+    vertex((space / 2) - 40, height / 2);
+    vertex(x, height / 1.5);
+    vertex((space / 2) - 40, height);
+
+    endShape();
+    pop();
+  }  
+  
+  translate(width / 2, height / 2, 200);
+  push();  
+  //rotateY(frameCount / -90);
+  orbitControl(1, 1, 1);
+  beginShape();
+  textSize(punchi * 0.6);  
+  fill(0);
+  text(currentSongName, 0, 100);
+  endShape();
+  pop();
+  
   /*beginShape();
   strokeWeight(punchi);
   line(x, 100, x, 500);
   endShape();*/
 
-  beginShape();
+  /*beginShape();
   strokeWeight(punchi);
   stroke(0);
   vertex(width / 2, 0);
@@ -158,15 +188,7 @@ function draw() {
   vertex(width / 2, height / 2);
   vertex(x, height / 1.5);
   vertex(width / 2, height);
-  endShape();
-
-  targetX = map(bassIntensity, 0, 1, 0, width); // Define el rango de movimiento
-
-  if (bassIntensity > 0.4) {
-    x = targetX; // Cambio brusco
-  } else {
-    x = lerp(x, targetX, 0.9); // Menos suavizado
-  }
+  endShape();*/
 
   /*beginShape(POINTS);
   stroke(255);
@@ -186,4 +208,13 @@ function pausa() {
     isPlaying = false;
     noLoop();
   }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
+
+function doubleClicked() {
+  resizeCanvas(windowWidth, windowHeight);
+  image(img, 0, 0);
 }
