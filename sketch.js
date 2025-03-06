@@ -8,8 +8,11 @@ let ySlide, xSlide;
 let sWeight;
 let x = 0;
 let targetX = 100;
+
 let img;
+
 let font;
+
 let space = 80;
 
 function preload() {
@@ -28,7 +31,7 @@ function setup() {
   for (let x = 0; x < img.width; x += 1) {
     for (let y = 0; y < img.height; y += 1) {
       let a = map(x, 0, img.width, 0, 255);
-      let c = color(63, 191, 191, a);
+      let c = color(63, 150, 150, a);
       img.set(x, y, c);
     }
   }
@@ -146,17 +149,17 @@ function draw() {
   pop();
  
   push();
-  translate(width / 2, 0, 20);
+  translate(width / 2, 0, 5);
   //orbitControl(0, 0, 1);
   push();
   beginShape();
-  strokeWeight(punchi);
-  stroke(0);
+  strokeWeight(punchi * 7);
+  stroke(fft.getEnergy("bass")/2, fft.getEnergy("mid")/2, fft.getEnergy("treble")/2, 50);
   
   vertex(0, 0);
-  vertex(x, height / 3);
+  vertex(0, height / 3);
   vertex(0, height / 2);
-  vertex(x, height / 1.5);
+  vertex(0, height / 1.5);
   vertex(0, height);
   
   endShape();
@@ -178,7 +181,7 @@ function draw() {
   beginShape();
   textSize(punchi * 0.6);  
   fill(0);
-  text(currentSongName, 0, 100);
+  text(currentSongName, 0, 150);
   endShape();
   pop();
   
